@@ -68,7 +68,8 @@ If we know the two sides a, b and the angle between them C, then the cosine of c
 > In short, the Illumination of the patch(Hillshade) is related to alitude of the sun, slope of the terrain and 
 the aspect.More details can be found in [How Hillshade works](http://desktop.arcgis.com/en/arcmap/10.3/tools/spatial-analyst-toolbox/how-hillshade-works.htm).We might have features like Aspect, Slope and HillShade that provides similar information.
 
-<center><img src="images/Variables.png" alt="Approch" style="height: 300px;width: 300px;"/></center>
+
+![Approch](images/Variables.png "Approch")
 
 The azimuth is the angular direction of the sun, measured from north in clockwise degrees from 0 to 360. An azimuth of 90 degrees is east. The default azimuth is 315 degrees (NW).
 
