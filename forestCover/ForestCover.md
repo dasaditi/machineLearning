@@ -21,7 +21,7 @@ human-caused disturbances, so forest covers are more a result of ecological proc
 practices. 
 
 
-The study area includes four wilderness areas located in the Roosevelt National Forest of northern Colorado. Each observation is a 30m x 30m patch. We are asked to predict an integer classification for the forest cover type. The seven types are:  
+The study area includes four wilderness areas located in the Roosevelt National Forest of northern Colorado. Each observation is a 30m x 30m patch. We will be predicting an integer classification for the forest cover type. The seven types are:  
 
 	1. Spruce/Fir
 	2. Lodgepole Pine  
@@ -32,6 +32,7 @@ The study area includes four wilderness areas located in the Roosevelt National 
 	7. Krummholz  
 
 The training set (15120 observations) contains both features and the Cover_Type.   
+The complete code can be found [here](https://github.com/dasaditi/machineLearning/tree/master/forestCover).
 
 ### Data Fields 
 
@@ -67,58 +68,21 @@ If we know the two sides a, b and the angle between them C, then the cosine of c
 > In short, the Illumination of the patch(Hillshade) is related to alitude of the sun, slope of the terrain and 
 the aspect.More details can be found in [How Hillshade works](http://desktop.arcgis.com/en/arcmap/10.3/tools/spatial-analyst-toolbox/how-hillshade-works.htm).We might have features like Aspect, Slope and HillShade that provides similar information.
 
-<img src="images/Variables.png" alt="Approch" align="center" style="height: 300px;width: 300px;"/>
+
+![Approch](images/Variables.png "Approch")
 
 The azimuth is the angular direction of the sun, measured from north in clockwise degrees from 0 to 360. An azimuth of 90 degrees is east. The default azimuth is 315 degrees (NW).
 
 The altitude is the slope or angle of the illumination source above the horizon. The units are in degrees, from 0 (on the horizon) to 90 (overhead). The default is 45 degrees.
 
-<img src="images/Altitude.gif" alt="Approch" align="center" style="height: 100px;width: 200px;"/>
+<center><img src="images/Altitude.gif" alt="Approch"  style="height: 100px;width: 200px;"/></center>
 
 ## Modeling Approach
-Here is the overview of our approach in finding the forest covers.
-<img src="images/FlowDiagramForest1.png" align="center" alt="Approch" style="height: 700px;width: 600px;"/>
+Here is the overview of our approach in finding the forest covers.  
+
+<center><img src="images/FlowDiagramForest1.png" alt="Approch" style="height: 700px;width: 600px;"/></center>
 
 ## Fetch the dataset
-
-
-```python
-%matplotlib inline
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.model_selection import train_test_split, learning_curve, ShuffleSplit
-from sklearn.linear_model import SGDClassifier
-from sklearn.ensemble import RandomForestClassifier,ExtraTreesClassifier, GradientBoostingClassifier,AdaBoostClassifier, VotingClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import learning_curve
-from sklearn.model_selection import ShuffleSplit
-from sklearn import metrics
-import seaborn as sns
-from sklearn import preprocessing
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.cluster import MiniBatchKMeans
-import warnings
-from sklearn.model_selection import RandomizedSearchCV
-from sklearn.decomposition import PCA
-warnings.filterwarnings('ignore')
-
-```
-
-
-```python
-# import the neural network modules
-from keras.models import Sequential 
-from keras.layers import Dense, Dropout, Activation, Conv1D, Conv2D, Flatten, MaxPool2D
-from keras import optimizers
-from keras.wrappers.scikit_learn import KerasClassifier
-```
-
-    Using TensorFlow backend.
-
 
 
 ```python
@@ -126,161 +90,8 @@ df = pd.read_csv('data/train.csv', engine='c')
 df.head()
 ```
 
-
-
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Id</th>
-      <th>Elevation</th>
-      <th>Aspect</th>
-      <th>Slope</th>
-      <th>Horizontal_Distance_To_Hydrology</th>
-      <th>Vertical_Distance_To_Hydrology</th>
-      <th>Horizontal_Distance_To_Roadways</th>
-      <th>Hillshade_9am</th>
-      <th>Hillshade_Noon</th>
-      <th>Hillshade_3pm</th>
-      <th>...</th>
-      <th>Soil_Type32</th>
-      <th>Soil_Type33</th>
-      <th>Soil_Type34</th>
-      <th>Soil_Type35</th>
-      <th>Soil_Type36</th>
-      <th>Soil_Type37</th>
-      <th>Soil_Type38</th>
-      <th>Soil_Type39</th>
-      <th>Soil_Type40</th>
-      <th>Cover_Type</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>1</td>
-      <td>2596</td>
-      <td>51</td>
-      <td>3</td>
-      <td>258</td>
-      <td>0</td>
-      <td>510</td>
-      <td>221</td>
-      <td>232</td>
-      <td>148</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>5</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>2</td>
-      <td>2590</td>
-      <td>56</td>
-      <td>2</td>
-      <td>212</td>
-      <td>-6</td>
-      <td>390</td>
-      <td>220</td>
-      <td>235</td>
-      <td>151</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>5</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>3</td>
-      <td>2804</td>
-      <td>139</td>
-      <td>9</td>
-      <td>268</td>
-      <td>65</td>
-      <td>3180</td>
-      <td>234</td>
-      <td>238</td>
-      <td>135</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>4</td>
-      <td>2785</td>
-      <td>155</td>
-      <td>18</td>
-      <td>242</td>
-      <td>118</td>
-      <td>3090</td>
-      <td>238</td>
-      <td>238</td>
-      <td>122</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>5</td>
-      <td>2595</td>
-      <td>45</td>
-      <td>2</td>
-      <td>153</td>
-      <td>-1</td>
-      <td>391</td>
-      <td>220</td>
-      <td>234</td>
-      <td>150</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>5</td>
-    </tr>
-  </tbody>
-</table>
 <p>5 rows × 56 columns</p>
-</div>
+
 
 
 
@@ -304,75 +115,6 @@ df.shape
 
 
 
-```python
-#All columns are Integer
-df.info()
-
-```
-
-    <class 'pandas.core.frame.DataFrame'>
-    RangeIndex: 15120 entries, 0 to 15119
-    Data columns (total 56 columns):
-    Id                                    15120 non-null int64
-    Elevation                             15120 non-null int64
-    Aspect                                15120 non-null int64
-    Slope                                 15120 non-null int64
-    Horizontal_Distance_To_Hydrology      15120 non-null int64
-    Vertical_Distance_To_Hydrology        15120 non-null int64
-    Horizontal_Distance_To_Roadways       15120 non-null int64
-    Hillshade_9am                         15120 non-null int64
-    Hillshade_Noon                        15120 non-null int64
-    Hillshade_3pm                         15120 non-null int64
-    Horizontal_Distance_To_Fire_Points    15120 non-null int64
-    Wilderness_Area1                      15120 non-null int64
-    Wilderness_Area2                      15120 non-null int64
-    Wilderness_Area3                      15120 non-null int64
-    Wilderness_Area4                      15120 non-null int64
-    Soil_Type1                            15120 non-null int64
-    Soil_Type2                            15120 non-null int64
-    Soil_Type3                            15120 non-null int64
-    Soil_Type4                            15120 non-null int64
-    Soil_Type5                            15120 non-null int64
-    Soil_Type6                            15120 non-null int64
-    Soil_Type7                            15120 non-null int64
-    Soil_Type8                            15120 non-null int64
-    Soil_Type9                            15120 non-null int64
-    Soil_Type10                           15120 non-null int64
-    Soil_Type11                           15120 non-null int64
-    Soil_Type12                           15120 non-null int64
-    Soil_Type13                           15120 non-null int64
-    Soil_Type14                           15120 non-null int64
-    Soil_Type15                           15120 non-null int64
-    Soil_Type16                           15120 non-null int64
-    Soil_Type17                           15120 non-null int64
-    Soil_Type18                           15120 non-null int64
-    Soil_Type19                           15120 non-null int64
-    Soil_Type20                           15120 non-null int64
-    Soil_Type21                           15120 non-null int64
-    Soil_Type22                           15120 non-null int64
-    Soil_Type23                           15120 non-null int64
-    Soil_Type24                           15120 non-null int64
-    Soil_Type25                           15120 non-null int64
-    Soil_Type26                           15120 non-null int64
-    Soil_Type27                           15120 non-null int64
-    Soil_Type28                           15120 non-null int64
-    Soil_Type29                           15120 non-null int64
-    Soil_Type30                           15120 non-null int64
-    Soil_Type31                           15120 non-null int64
-    Soil_Type32                           15120 non-null int64
-    Soil_Type33                           15120 non-null int64
-    Soil_Type34                           15120 non-null int64
-    Soil_Type35                           15120 non-null int64
-    Soil_Type36                           15120 non-null int64
-    Soil_Type37                           15120 non-null int64
-    Soil_Type38                           15120 non-null int64
-    Soil_Type39                           15120 non-null int64
-    Soil_Type40                           15120 non-null int64
-    Cover_Type                            15120 non-null int64
-    dtypes: int64(56)
-    memory usage: 6.5 MB
-
-
 #### Determine Missing Values
 
 
@@ -385,49 +127,6 @@ df[df.isnull().any(axis=1)]
 
 
 <div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-    
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Id</th>
-      <th>Elevation</th>
-      <th>Aspect</th>
-      <th>Slope</th>
-      <th>Horizontal_Distance_To_Hydrology</th>
-      <th>Vertical_Distance_To_Hydrology</th>
-      <th>Horizontal_Distance_To_Roadways</th>
-      <th>Hillshade_9am</th>
-      <th>Hillshade_Noon</th>
-      <th>Hillshade_3pm</th>
-      <th>...</th>
-      <th>Soil_Type32</th>
-      <th>Soil_Type33</th>
-      <th>Soil_Type34</th>
-      <th>Soil_Type35</th>
-      <th>Soil_Type36</th>
-      <th>Soil_Type37</th>
-      <th>Soil_Type38</th>
-      <th>Soil_Type39</th>
-      <th>Soil_Type40</th>
-      <th>Cover_Type</th>
-    </tr>
-  </thead>
-  <tbody>
-  </tbody>
-</table>
 <p>0 rows × 56 columns</p>
 </div>
 
@@ -637,11 +336,6 @@ X_train.loc[unique_index,:].Cover_Type.value_counts()
 
     Total number of outliers:  144
     Total number of outliers by cover type: 
-
-
-
-
-
     5    74
     2    32
     1    21
@@ -666,16 +360,9 @@ Before doing the modeling we removed the outliers
 # Let's see if deleting the outliers helps or not
 X_train.drop(unique_index,axis='rows',inplace=True)
 y_train.drop(unique_index,axis='rows',inplace=True)
-y_train.shape
+
 ```
-
-
-
-
-    (11962,)
-
-
-
+    
 **C. Scatterplots, comparsion among the independent variable.**  
 **Aspect vs. Hillshade** Aspect is the orientation of slope, measured clockwise in degrees from 0 to 360, where 0 is north-facing, 90 is east-facing, 180 is south-facing, and 270 is west-facing. Let's look at aspect vs Hillshade .
 
@@ -812,15 +499,15 @@ sns.heatmap(corrmat,vmax=0.8,square=True);
 #### H. Correlation Values
 We do observe some strong correlations as folllows: 
 
-$\hspace{10mm}$   1. Aspect is highly correlated to Hillshade_9am and Hillshade_3pm
+   1. Aspect is highly correlated to Hillshade_9am and Hillshade_3pm
 
-$\hspace{10mm}$   2. Horizontal distance to hydrology is highly correlated to Vertical Distance to Hydrology
+   2. Horizontal distance to hydrology is highly correlated to Vertical Distance to Hydrology
 
-$\hspace{10mm}$   3. Slope and Hillshade_Noon
+   3. Slope and Hillshade_Noon
 
-$\hspace{10mm}$   4. Elevation and Horizontal Distance to Roadways 
+   4. Elevation and Horizontal Distance to Roadways 
 
-Our hypothesis is that the feature selection process later inn this notebook will allow us to determine which of the highly correlated features should be dropped from our feature set, if any.
+Our hypothesis is that the feature selection process later in this notebook will allow us to determine which of the highly correlated features should be dropped from our feature set, if any.
 
 
 ```python
@@ -1043,253 +730,7 @@ print(knnReport)
 3. As seen from the confusion matrix, most wrong classifications are between Cover Type 1 and COver Type 2 and between 3 and 6. 
 4. Removing the outliers has not significantly improvemed the accuracy of the model (tests with outliers included not shown in this notebook.)
 
-### Create baseline KNN submission for Kaggle
-
-
-
-
-```python
-# Read in the test data
-kaggle_df = pd.read_csv('data/test.csv', engine='c')
-kaggle_df.head()
-```
-
-
-
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>Id</th>
-      <th>Elevation</th>
-      <th>Aspect</th>
-      <th>Slope</th>
-      <th>Horizontal_Distance_To_Hydrology</th>
-      <th>Vertical_Distance_To_Hydrology</th>
-      <th>Horizontal_Distance_To_Roadways</th>
-      <th>Hillshade_9am</th>
-      <th>Hillshade_Noon</th>
-      <th>Hillshade_3pm</th>
-      <th>...</th>
-      <th>Soil_Type31</th>
-      <th>Soil_Type32</th>
-      <th>Soil_Type33</th>
-      <th>Soil_Type34</th>
-      <th>Soil_Type35</th>
-      <th>Soil_Type36</th>
-      <th>Soil_Type37</th>
-      <th>Soil_Type38</th>
-      <th>Soil_Type39</th>
-      <th>Soil_Type40</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>15121</td>
-      <td>2680</td>
-      <td>354</td>
-      <td>14</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2684</td>
-      <td>196</td>
-      <td>214</td>
-      <td>156</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>15122</td>
-      <td>2683</td>
-      <td>0</td>
-      <td>13</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2654</td>
-      <td>201</td>
-      <td>216</td>
-      <td>152</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>15123</td>
-      <td>2713</td>
-      <td>16</td>
-      <td>15</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2980</td>
-      <td>206</td>
-      <td>208</td>
-      <td>137</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>15124</td>
-      <td>2709</td>
-      <td>24</td>
-      <td>17</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2950</td>
-      <td>208</td>
-      <td>201</td>
-      <td>125</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>15125</td>
-      <td>2706</td>
-      <td>29</td>
-      <td>19</td>
-      <td>0</td>
-      <td>0</td>
-      <td>2920</td>
-      <td>210</td>
-      <td>195</td>
-      <td>115</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 55 columns</p>
-</div>
-
-
-
-
-```python
-# Doing the same data prep steps here as were done to the training data
-# check for missing values in the test data -- none found
-kaggle_df[kaggle_df.isnull().any(axis=1)]
-# Setting the Id as index 
-kaggle_df.set_index('Id',inplace=True)
-
-# drop soil types that were dropped due to no values for them in the training data
-kaggle_df.drop(['Soil_Type7','Soil_Type15'],axis='columns',inplace=True)
-
-# use the absolute value for any Vertical Distance to Hydrology values that are negative
-# just like we did on our training data
-kaggle_df['Vertical_Distance_To_Hydrology'] = abs(kaggle_df['Vertical_Distance_To_Hydrology'])
-
-# Scale the continuous data as we did with the training data
-scaler = preprocessing.StandardScaler()
-
-# scaledColsOrig columns are defined earlier when we scale the training data 
-
-# Thinking fit_transform is appropriate here, instead of using the fit done earlier on the training
-# data, since we have several more observations of test data, and their ranges may be different enough
-# to require a separate fit here
-kaggle_df[scaledColsOrig] = scaler.fit_transform(kaggle_df[scaledColsOrig])
-
-```
-
-
-```python
-# Use knn_orig model created above (k=1)
-
-kaggle_predict_knn_baseline =  knn_orig.predict(kaggle_df)
-kaggle_predict_knn_baseline.shape
-```
-
-
-```python
-# create the table of IDs and predicted cover types for submission file
-kaggle_df.reset_index(inplace=True)
-
-tmp_arr=np.zeros((len(kaggle_predict_knn_baseline),2),dtype=int)
-tmp_arr[:,0]=kaggle_df.Id
-tmp_arr[:,1]=kaggle_predict_knn_baseline
-submit_file = pd.DataFrame({'Id':tmp_arr[:,0],'Cover_Type':tmp_arr[:,1]})
-print(submit_file.shape)
-submit_file.head()
-```
-
-
-```python
-# And write out the csv file
-
-sub_file_csv = submit_file.to_csv(index=False)
-csvfile = open('baselinesubmit.csv', "w", encoding="utf8")   
-csvfile.write(sub_file_csv)
-csvfile.close()
-```
-
 ### 2. Neural Network on the original dataset
-
-
-```python
-# First binarize the labels per Todd's guidance
-def binarizeY(data):
-    binarized_data = np.zeros((data.size,7))
-    for j in range(0,data.size):
-        feature = data[j:j+1]
-        i = feature.astype(np.int64) 
-        binarized_data[j,i-1]=1 # subtracting 1 here since the index values are 0 = 6 while range of labels is 1 - 7
-    return binarized_data
-y_train_orig_b = binarizeY(y_train_orig)
-y_val_orig_b = binarizeY(y_val_orig)
-numClasses = y_train_orig_b[1].size
-print ('Classes = %d' %(numClasses))
-```
-
-    Classes = 7
-
 
 
 ```python
@@ -1310,143 +751,6 @@ print('accuracy:', score[1])
 
 nn_pred = model.predict_classes(X_val_orig)
 nn_pred = nn_pred + 1 # adding one back to compensate for 1 - 7 labels converted to 0 - 6 index in binarizing function
-```
-
-    WARNING:tensorflow:From C:\Users\jbraun\AppData\Local\Continuum\anaconda3\lib\site-packages\tensorflow\python\framework\op_def_library.py:263: colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
-    Instructions for updating:
-    Colocations handled automatically by placer.
-    WARNING:tensorflow:From C:\Users\jbraun\AppData\Local\Continuum\anaconda3\lib\site-packages\tensorflow\python\ops\math_ops.py:3066: to_int32 (from tensorflow.python.ops.math_ops) is deprecated and will be removed in a future version.
-    Instructions for updating:
-    Use tf.cast instead.
-    loss: 0.5928830017173101
-    accuracy: 0.7582671957671958
-
-
-### Create Kaggle submission for baseline Neural Network model
-
-
-```python
-# using the data already prepared for the KNN baseline Kaggle submission above, as well as the NN model created above
-# kaggle_predict_nn_baseline =  np.argmax(np.round(model.predict(kaggle_df)),axis=1)
-
-# If running this aftern having run the KNN Kaggle submission above, make sure you rerun
-# the read of the test data set cell and the Kaggle data prep cell before running this cell
-
-kaggle_predict_nn_baseline =  model.predict_classes(kaggle_df)
-kaggle_predict_nn_baseline = kaggle_predict_nn_baseline + 1 # adding one back to compensate for 1 - 7 labels converted to 0 - 6 index in binarizing function
-kaggle_predict_nn_baseline.shape
-```
-
-
-```python
-# create the table of IDs and predicted cover types for submission file
-kaggle_df.reset_index(inplace=True)
-
-tmp_arr=np.zeros((len(kaggle_predict_nn_baseline),2),dtype=int)
-tmp_arr[:,0]=kaggle_df.Id
-tmp_arr[:,1]=kaggle_predict_nn_baseline
-submit_file = pd.DataFrame({'Id':tmp_arr[:,0],'Cover_Type':tmp_arr[:,1]})
-print(submit_file.shape)
-submit_file.head()
-```
-
-
-```python
-# And write out the csv file
-
-sub_file_csv = submit_file.to_csv(index=False)
-csvfile = open('nnbaselinesubmit.csv', "w", encoding="utf8")   
-csvfile.write(sub_file_csv)
-csvfile.close()
-```
-
-### Plotting Learning Curves
-
-
-```python
-# Function defined in Scikit Learn
-
-def plot_learning_curve(estimator, title, X, y, ylim=None, cv=None,
-                        n_jobs=None, train_sizes=np.linspace(.1, 1.0, 5)):
-    """
-    Generate a simple plot of the test and training learning curve.
-
-    Parameters
-    ----------
-    estimator : object type that implements the "fit" and "predict" methods
-        An object of that type which is cloned for each validation.
-
-    title : string
-        Title for the chart.
-
-    X : array-like, shape (n_samples, n_features)
-        Training vector, where n_samples is the number of samples and
-        n_features is the number of features.
-
-    y : array-like, shape (n_samples) or (n_samples, n_features), optional
-        Target relative to X for classification or regression;
-        None for unsupervised learning.
-
-    ylim : tuple, shape (ymin, ymax), optional
-        Defines minimum and maximum yvalues plotted.
-
-    cv : int, cross-validation generator or an iterable, optional
-        Determines the cross-validation splitting strategy.
-        Possible inputs for cv are:
-          - None, to use the default 3-fold cross-validation,
-          - integer, to specify the number of folds.
-          - :term:`CV splitter`,
-          - An iterable yielding (train, test) splits as arrays of indices.
-
-        For integer/None inputs, if ``y`` is binary or multiclass,
-        :class:`StratifiedKFold` used. If the estimator is not a classifier
-        or if ``y`` is neither binary nor multiclass, :class:`KFold` is used.
-
-        Refer :ref:`User Guide <cross_validation>` for the various
-        cross-validators that can be used here.
-
-    n_jobs : int or None, optional (default=None)
-        Number of jobs to run in parallel.
-        ``None`` means 1 unless in a :obj:`joblib.parallel_backend` context.
-        ``-1`` means using all processors. See :term:`Glossary <n_jobs>`
-        for more details.
-
-    train_sizes : array-like, shape (n_ticks,), dtype float or int
-        Relative or absolute numbers of training examples that will be used to
-        generate the learning curve. If the dtype is float, it is regarded as a
-        fraction of the maximum size of the training set (that is determined
-        by the selected validation method), i.e. it has to be within (0, 1].
-        Otherwise it is interpreted as absolute sizes of the training sets.
-        Note that for classification the number of samples usually have to
-        be big enough to contain at least one sample from each class.
-        (default: np.linspace(0.1, 1.0, 5))
-    """
-    plt.figure()
-    plt.title(title)
-    if ylim is not None:
-        plt.ylim(*ylim)
-    plt.xlabel("Training examples")
-    plt.ylabel("Score")
-    train_sizes, train_scores, test_scores = learning_curve(
-        estimator, X, y, cv=cv, n_jobs=n_jobs, train_sizes=train_sizes)
-    train_scores_mean = np.mean(train_scores, axis=1)
-    train_scores_std = np.std(train_scores, axis=1)
-    test_scores_mean = np.mean(test_scores, axis=1)
-    test_scores_std = np.std(test_scores, axis=1)
-    plt.grid()
-
-    plt.fill_between(train_sizes, train_scores_mean - train_scores_std,
-                     train_scores_mean + train_scores_std, alpha=0.1,
-                     color="r")
-    plt.fill_between(train_sizes, test_scores_mean - test_scores_std,
-                     test_scores_mean + test_scores_std, alpha=0.1, color="g")
-    plt.plot(train_sizes, train_scores_mean, 'o-', color="r",
-             label="Training score")
-    plt.plot(train_sizes, test_scores_mean, 'o-', color="g",
-             label="Cross-validation score")
-
-    plt.legend(loc="best")
-    return plt
 ```
 
 ## Feature Engineering
@@ -1662,65 +966,10 @@ Feature selection can be an important part of the machine learning process as it
 
 We will run L1 regularization and Feature Importance with ExtraTreesClassifier first, fetch the important features and re-run the models again to evaluate performance.
 
-<img src="images/FlowDiagramForest2.png" align="center" alt="Feature Selection" style="height: 400px;width: 500px;"/>
+<center><img src="images/FlowDiagramForest2.png"  alt="Feature Selection" style="height: 400px;width: 500px;"/></center>
 
 ### 1. Finding Feature Importance with ExtraTreesClassifier
 ExtraTreesClassifier is a randomized decision tree classifier which samples a random subset of the feature-space when deciding where to make the next split.  Extra trees seem to keep a higher performance in presence of noisy features.
-
-
-```python
-def getImportance(classifier,cols,title):
-    """ Create a chart of feature importances given a tree classifier."""
-
-    importances = classifier.feature_importances_
-    indices=np.argsort(importances)[::-1][:30]
-    # Plot the feature importances of the forest
-    plt.figure(figsize=(50,20))
-    plt.title(title,fontsize=45)
-    plt.bar(range(30), importances[indices],
-       align="center",alpha=.5,color="BrBG")
-    plt.xticks(range(30), cols[indices], rotation=45, rotation_mode="anchor", ha="right",fontsize=30)
-    plt.yticks(fontsize=30)
-    plt.xlim([-1, 30])
-    plt.show()
-```
-
-
-```python
-# Build a forest and compute the feature importances
-n_estimators = list(range(50, 250,5))
-criterion=['gini','entropy']
-#min_samples_leaf = list(range(5, 25))
-#min_samples_split = list(range(5, 25))
-#max_depth = list(range(8, 50))
-# create a parameter grid: map the parameter names to the values that should be searched
-param_grid = dict(n_estimators=n_estimators, criterion=criterion)
-
-forest = ExtraTreesClassifier(random_state=0)
-grid_etc = RandomizedSearchCV(forest, param_grid, cv=5, scoring="accuracy" ,return_train_score=False)
-grid_etc.fit(X_train, y_train)
-print("The best score: ",grid_etc.best_score_.round(4))
-#Parameter setting that gave the best results on the hold out data.
-print("The best parameter: ",grid_etc.best_params_)
-grid_etc.best_estimator_
-
-```
-
-    The best score:  0.8732
-    The best parameter:  {'n_estimators': 105, 'criterion': 'entropy'}
-
-
-
-
-
-    ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='entropy',
-               max_depth=None, max_features='auto', max_leaf_nodes=None,
-               min_impurity_decrease=0.0, min_impurity_split=None,
-               min_samples_leaf=1, min_samples_split=2,
-               min_weight_fraction_leaf=0.0, n_estimators=105, n_jobs=None,
-               oob_score=False, random_state=0, verbose=0, warm_start=False)
-
-
 
 
 ```python
@@ -1778,17 +1027,6 @@ grid_etc_selected.best_estimator_
 
     The best score:  0.8758
     The best parameter:  {'n_estimators': 165, 'criterion': 'entropy'}
-
-
-
-
-
-    ExtraTreesClassifier(bootstrap=False, class_weight=None, criterion='entropy',
-               max_depth=None, max_features='auto', max_leaf_nodes=None,
-               min_impurity_decrease=0.0, min_impurity_split=None,
-               min_samples_leaf=1, min_samples_split=2,
-               min_weight_fraction_leaf=0.0, n_estimators=165, n_jobs=None,
-               oob_score=False, random_state=0, verbose=0, warm_start=False)
 
 
 
@@ -1933,23 +1171,6 @@ grid_ada = RandomizedSearchCV(ada, param_grid, cv=3, scoring='accuracy' ,return_
 grid_ada.fit(X_train_final_selected, y_train)
 
 ```
-
-
-
-
-    RandomizedSearchCV(cv=3, error_score='raise-deprecating',
-              estimator=AdaBoostClassifier(algorithm='SAMME',
-              base_estimator=DecisionTreeClassifier(class_weight=None, criterion='gini', max_depth=6,
-                max_features=None, max_leaf_nodes=None,
-                min_impurity_decrease=0.0, min_impurity_split=None,
-                min_samples_leaf=1, min_samples_split=2,
-                min_weight_fraction_leaf=0.0, presort=False, random_state=None,
-                splitter='best'),
-              learning_rate=1.0, n_estimators=50, random_state=None),
-              fit_params=None, iid='warn', n_iter=10, n_jobs=None,
-              param_distributions={'n_estimators': [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 310, 320, 330, 340, 350, 360, 370, 380, 390, 400, 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 640], 'learning_rate': [1, 1.5, 2.0]},
-              pre_dispatch='2*n_jobs', random_state=None, refit=True,
-              return_train_score=False, scoring='accuracy', verbose=0)
 
 
 
@@ -2154,7 +1375,7 @@ print("Accuracy achieved by ensembling",metrics.accuracy_score(y_val,y_pred_ense
 
 
 ## Run PCA to do dimensionality reduction on data set with combined features from feature selection
-<img src="images/FlowDiagramForest3.png" align="center" alt="Feature Selection" style="height: 400px;width: 450px;"/>
+<center><img src="images/FlowDiagramForest3.png"  alt="Feature Selection" style="height: 400px;width: 450px;"/></center>
 
 
 ```python
@@ -2193,8 +1414,6 @@ var_rslts
 ```
 
 
-
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -2309,144 +1528,15 @@ var_rslts
       <td>0.00</td>
       <td>0.988</td>
     </tr>
-    <tr>
-      <th>21</th>
-      <td>0.00</td>
-      <td>0.990</td>
-    </tr>
-    <tr>
-      <th>22</th>
-      <td>0.00</td>
-      <td>0.991</td>
-    </tr>
-    <tr>
-      <th>23</th>
-      <td>0.00</td>
-      <td>0.993</td>
-    </tr>
-    <tr>
-      <th>24</th>
-      <td>0.00</td>
-      <td>0.994</td>
-    </tr>
-    <tr>
-      <th>25</th>
-      <td>0.00</td>
-      <td>0.995</td>
-    </tr>
-    <tr>
-      <th>26</th>
-      <td>0.00</td>
-      <td>0.996</td>
-    </tr>
-    <tr>
-      <th>27</th>
-      <td>0.00</td>
-      <td>0.996</td>
-    </tr>
-    <tr>
-      <th>28</th>
-      <td>0.00</td>
-      <td>0.997</td>
-    </tr>
-    <tr>
-      <th>29</th>
-      <td>0.00</td>
-      <td>0.998</td>
-    </tr>
-    <tr>
-      <th>30</th>
-      <td>0.00</td>
-      <td>0.998</td>
-    </tr>
-    <tr>
-      <th>31</th>
-      <td>0.00</td>
-      <td>0.999</td>
-    </tr>
-    <tr>
-      <th>32</th>
-      <td>0.00</td>
-      <td>0.999</td>
-    </tr>
-    <tr>
-      <th>33</th>
-      <td>0.00</td>
-      <td>0.999</td>
-    </tr>
-    <tr>
-      <th>34</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>35</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>36</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>37</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>38</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>39</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>40</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>41</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>42</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>43</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>44</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>45</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
-    <tr>
-      <th>46</th>
-      <td>0.00</td>
-      <td>1.000</td>
-    </tr>
+    
   </tbody>
 </table>
-</div>
 
 
 
 
-![png](output_126_1.png)
+
+![png](images/output_126_1.png)
 
 
 Looks Like most variance (99.5%) is explained once we reach 26 principal components, so let's create training and validation data sets using the first 26 principal components
